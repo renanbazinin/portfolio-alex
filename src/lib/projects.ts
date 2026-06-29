@@ -19,6 +19,15 @@ export async function listPublishedProjects(): Promise<Project[]> {
     .orderBy(asc(projects.sortOrder), asc(projects.id));
 }
 
+/** Published + featured projects, for the home showcase. */
+export async function listFeaturedProjects(): Promise<Project[]> {
+  return db
+    .select()
+    .from(projects)
+    .where(and(eq(projects.publishStatus, "published"), eq(projects.featured, true)))
+    .orderBy(asc(projects.sortOrder), asc(projects.id));
+}
+
 export async function getProjectById(id: number): Promise<Project | null> {
   const rows = await db.select().from(projects).where(eq(projects.id, id)).limit(1);
   return rows[0] ?? null;
@@ -77,6 +86,7 @@ export async function createProject(input: ProjectInput): Promise<Project> {
       images: input.images,
       videoUrl: input.videoUrl,
       publishStatus: input.publishStatus,
+      featured: input.featured,
       sortOrder: input.sortOrder,
     })
     .returning();
@@ -102,6 +112,7 @@ export async function updateProject(
       images: input.images,
       videoUrl: input.videoUrl,
       publishStatus: input.publishStatus,
+      featured: input.featured,
       sortOrder: input.sortOrder,
       updatedAt: sql`now()`,
     })

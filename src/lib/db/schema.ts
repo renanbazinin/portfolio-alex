@@ -3,6 +3,7 @@ import {
   serial,
   text,
   integer,
+  boolean,
   timestamp,
   jsonb,
   pgEnum,
@@ -26,6 +27,7 @@ export const projects = pgTable("projects", {
   images: jsonb("images").$type<string[]>().notNull().default([]),
   videoUrl: text("video_url").notNull().default(""),
   publishStatus: publishStatusEnum("publish_status").notNull().default("draft"),
+  featured: boolean("featured").notNull().default(false),
   sortOrder: integer("sort_order").notNull().default(0),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()

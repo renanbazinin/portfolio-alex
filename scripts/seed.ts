@@ -3,87 +3,93 @@ import { neon } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
 import { projects } from "../src/lib/db/schema";
 
-const LEGACY_URL =
-  "https://raw.githubusercontent.com/renabazinin/repoForRawThings/refs/heads/main/alexPort/projects.json";
-
-type LegacyProject = {
-  slug?: string;
-  title?: string;
-  category?: string;
-  year?: number | string;
-  role?: string;
-  tools?: string[];
-  thumb?: string;
-  thumbnail?: string;
-  videoUrl?: string;
-  images?: string[];
-  description?: string;
-};
-
-function slugify(value: string): string {
-  return value
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
+/**
+ * Alex's real project catalog, consolidated from the alex-portfolio repo.
+ * Image paths point at /public/assets (copied into this app); broken
+ * /alex-portfolio/assets paths and the test entry have been removed, and
+ * references to images that don't exist in the repo are dropped.
+ */
+const PROJECTS = [
+  {
+    slug: "fantasy-dragon",
+    title: "Fantasy Dragon Flight",
+    category: "3D",
+    year: 2024,
+    role: "Animation Director",
+    tools: ["Maya", "Houdini", "Substance Painter"],
+    thumbnail: "/assets/dragon-1.png",
+    images: ["/assets/dragon-1.png"],
+    videoUrl: "",
+    description:
+      "Epic dragon flight sequence with procedural wing dynamics and particle effects. Created for a AAA game cinematic trailer.",
+    publishStatus: "published" as const,
+    featured: true,
+  },
+  {
+    slug: "mixer-animation",
+    title: "Mixer Animation",
+    category: "3D",
+    year: 2024,
+    role: "Lead Animator",
+    tools: ["Maya", "Blender", "After Effects"],
+    thumbnail: "/assets/mixer-1.png",
+    images: ["/assets/mixer-1.png"],
+    videoUrl: "",
+    description:
+      "A dynamic 3D animation showcasing advanced rigging and motion techniques. This project demonstrates realistic movements and precise timing for product visualization.",
+    publishStatus: "published" as const,
+    featured: true,
+  },
+  {
+    slug: "classic-character-walk",
+    title: "Classic Character Walk",
+    category: "Classic",
+    year: 2023,
+    role: "Animator",
+    tools: ["TVPaint", "Photoshop"],
+    thumbnail: "/assets/walk-1.png",
+    images: ["/assets/walk-1.png", "/assets/walk-2.png"],
+    videoUrl: "",
+    description:
+      "Traditional frame-by-frame animation demonstrating the principles of weight, timing, and personality through a simple walk cycle.",
+    publishStatus: "published" as const,
+    featured: false,
+  },
+  {
+    slug: "mixer-animation-2",
+    title: "Mixer Animation 2",
+    category: "Classic",
+    year: 2023,
+    role: "Lead Animator",
+    tools: ["Toon Boom Harmony", "Procreate"],
+    thumbnail: "/assets/mixer-1.png",
+    images: ["/assets/mixer-1.png"],
+    videoUrl: "",
+    description:
+      "A beautiful hand-drawn animation sequence featuring fluid movements and expressive motion for an independent animated project.",
+    publishStatus: "published" as const,
+    featured: false,
+  },
+];
 
 async function main() {
   if (!process.env.DATABASE_URL) {
     throw new Error("DATABASE_URL is required to seed.");
   }
 
-  console.log("Fetching legacy projects from", LEGACY_URL);
-  const res = await fetch(LEGACY_URL);
-  if (!res.ok) {
-    throw new Error(`Failed to fetch legacy data: ${res.status}`);
-  }
-  const legacy = (await res.json()) as LegacyProject[];
-  console.log(`Found ${legacy.length} legacy projects.`);
-
   const sql = neon(process.env.DATABASE_URL);
   const db = drizzle(sql, { schema: { projects } });
 
-  const seen = new Set<string>();
-  let inserted = 0;
+  console.log("Clearing existing projects…");
+  await db.delete(projects);
 
-  for (let i = 0; i < legacy.length; i++) {
-    const p = legacy[i];
-    const title = (p.title ?? "Untitled").trim();
-    let slug = slugify(p.slug || title) || `project-${i + 1}`;
-    while (seen.has(slug)) slug = `${slug}-${i + 1}`;
-    seen.add(slug);
-
-    const yearNum =
-      typeof p.year === "number"
-        ? p.year
-        : p.year && /^\d{4}$/.test(String(p.year))
-          ? Number(p.year)
-          : null;
-
-    const result = await db
-      .insert(projects)
-      .values({
-        slug,
-        title,
-        category: p.category ?? "",
-        year: yearNum,
-        role: p.role ?? "",
-        tools: Array.isArray(p.tools) ? p.tools : [],
-        description: p.description ?? "",
-        thumbnail: p.thumbnail ?? p.thumb ?? "",
-        images: Array.isArray(p.images) ? p.images : [],
-        videoUrl: p.videoUrl ?? "",
-        publishStatus: "published",
-        sortOrder: i,
-      })
-      .onConflictDoNothing({ target: projects.slug })
-      .returning({ id: projects.id });
-
-    if (result.length > 0) inserted++;
+  for (let i = 0; i < PROJECTS.length; i++) {
+    const p = PROJECTS[i];
+    await db.insert(projects).values({ ...p, sortOrder: i });
+    console.log(`  + ${p.title}${p.featured ? " ★" : ""}`);
   }
 
-  console.log(`Seed complete. Inserted ${inserted} new projects.`);
+  console.log(`Seed complete. Inserted ${PROJECTS.length} projects.`);
   process.exit(0);
 }
 

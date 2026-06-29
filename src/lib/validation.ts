@@ -23,6 +23,7 @@ export const projectInputSchema = z.object({
   images: z.array(z.string().trim()).default([]),
   videoUrl: z.string().trim().default(""),
   publishStatus: z.enum(["draft", "published"]).default("draft"),
+  featured: z.coerce.boolean().default(false),
   sortOrder: z.coerce.number().int().default(0),
 });
 

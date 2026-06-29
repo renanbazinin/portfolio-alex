@@ -30,6 +30,7 @@ type FormState = {
   images: string[];
   videoUrl: string;
   publishStatus: "draft" | "published";
+  featured: boolean;
 };
 
 function fromProject(p?: Project): FormState {
@@ -45,6 +46,7 @@ function fromProject(p?: Project): FormState {
     images: p?.images ?? [],
     videoUrl: p?.videoUrl ?? "",
     publishStatus: p?.publishStatus ?? "draft",
+    featured: p?.featured ?? false,
   };
 }
 
@@ -95,6 +97,7 @@ export function ProjectForm({ project }: { project?: Project }) {
       images: form.images,
       videoUrl: form.videoUrl.trim(),
       publishStatus: form.publishStatus,
+      featured: form.featured,
     };
 
     try {
@@ -227,6 +230,21 @@ export function ProjectForm({ project }: { project?: Project }) {
             </SelectContent>
           </Select>
         </Field>
+
+        <label className="flex cursor-pointer items-center gap-2.5">
+          <input
+            type="checkbox"
+            checked={form.featured}
+            onChange={(e) => set("featured", e.target.checked)}
+            className="border-input size-4 rounded"
+          />
+          <span className="text-sm font-medium">
+            Feature on home page
+          </span>
+          <span className="text-muted-foreground text-xs">
+            (shown in the home showcase)
+          </span>
+        </label>
 
         <div className="flex gap-2 pt-2">
           <Button type="submit" disabled={saving}>

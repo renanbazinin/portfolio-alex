@@ -68,6 +68,26 @@ export function Dashboard({
     }
   }
 
+  async function toggleFeatured(p: Project) {
+    setBusyId(p.id);
+    try {
+      const res = await fetch(`/api/projects/${p.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...p, featured: !p.featured }),
+      });
+      if (!res.ok) throw new Error();
+      const updated = (await res.json()) as Project;
+      setProjects((prev) => prev.map((x) => (x.id === p.id ? updated : x)));
+      toast.success(updated.featured ? "Added to featured" : "Removed from featured");
+      router.refresh();
+    } catch {
+      toast.error("Failed to update featured");
+    } finally {
+      setBusyId(null);
+    }
+  }
+
   async function remove(p: Project) {
     if (!confirm(`Delete "${p.title}"? This cannot be undone.`)) return;
     setBusyId(p.id);
@@ -184,6 +204,9 @@ export function Dashboard({
                   >
                     {p.publishStatus}
                   </Badge>
+                  {p.featured ? (
+                    <Badge variant="outline">★ Featured</Badge>
+                  ) : null}
                 </div>
                 <p className="text-muted-foreground truncate text-sm">
                   {[p.category, p.role, p.year].filter(Boolean).join(" • ")}
@@ -208,6 +231,15 @@ export function Dashboard({
                   title="Move down"
                 >
                   ↓
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  disabled={busyId === p.id}
+                  onClick={() => toggleFeatured(p)}
+                  title={p.featured ? "Remove from featured" : "Add to featured"}
+                >
+                  {p.featured ? "★" : "☆"}
                 </Button>
                 <Button
                   variant="outline"

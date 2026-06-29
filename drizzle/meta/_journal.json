@@ -8,6 +8,13 @@
       "when": 1782749273582,
       "tag": "0000_eager_ken_ellis",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1782757560322,
+      "tag": "0001_daily_vision",
+      "breakpoints": true
     }
   ]
 }
