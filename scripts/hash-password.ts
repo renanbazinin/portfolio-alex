@@ -7,6 +7,7 @@ if (!password) {
 }
 
 const hash = await bcrypt.hash(password, 12);
+const encoded = Buffer.from(hash, "utf8").toString("base64");
 console.log("\nAdd this to your environment as ADMIN_PASSWORD_HASH:\n");
-console.log(hash);
+console.log(encoded);
 console.log();
