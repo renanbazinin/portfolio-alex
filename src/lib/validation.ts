@@ -63,6 +63,9 @@ const specialtySchema = z.object({
 });
 
 export const siteSettingsInputSchema = z.object({
+  homeVariant: z
+    .enum(["minimal", "hero-work", "standard", "expanded"])
+    .default("minimal"),
   heroTitle: z.string().trim().default(""),
   heroSubtitle: z.string().trim().default(""),
   specialties: z.array(specialtySchema).default([]),

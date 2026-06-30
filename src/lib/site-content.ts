@@ -1,12 +1,44 @@
 import type {
   ApproachItem,
   ExpertiseGroup,
+  HomeVariant,
   SocialLink,
   Specialty,
 } from "@/lib/db/schema";
 
+export type { HomeVariant };
+
+/** Home page layouts, ordered from least to most verbose. */
+export const HOME_VARIANTS: {
+  value: HomeVariant;
+  label: string;
+  description: string;
+}[] = [
+  {
+    value: "minimal",
+    label: "Minimal — centered hero only",
+    description: "The cleanest landing: just your name, role, and calls to action.",
+  },
+  {
+    value: "hero-work",
+    label: "Hero + Work",
+    description: "Centered hero followed by your featured projects.",
+  },
+  {
+    value: "standard",
+    label: "Standard",
+    description: "Headline hero, featured projects, and specialty cards.",
+  },
+  {
+    value: "expanded",
+    label: "Expanded",
+    description: "Everything above plus a short intro from your About page.",
+  },
+];
+
 /** The editable shape of site content, independent of DB row metadata. */
 export type SiteContent = {
+  homeVariant: HomeVariant;
   heroTitle: string;
   heroSubtitle: string;
   specialties: Specialty[];
@@ -27,6 +59,7 @@ export type SiteContent = {
  * exists, so the public site renders correctly before any edit is made.
  */
 export const DEFAULT_SITE_SETTINGS: SiteContent = {
+  homeVariant: "minimal",
   heroTitle: "Alex — bringing stories to life through animation.",
   heroSubtitle:
     "With expertise spanning both 3D and classic animation techniques, I create compelling visual narratives — from character animation to complex motion design, crafted with precision and artistic vision.",

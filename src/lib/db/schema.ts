@@ -44,6 +44,7 @@ export type ExpertiseGroup = { heading: string; items: string[] };
 export type ApproachItem = { n: string; title: string; body: string };
 export type SocialLink = { label: string; href: string };
 export type Specialty = { title: string; description: string };
+export type HomeVariant = "minimal" | "hero-work" | "standard" | "expanded";
 
 /**
  * Singleton row (id = 1) holding admin-editable site content: About copy,
@@ -52,6 +53,7 @@ export type Specialty = { title: string; description: string };
  */
 export const siteSettings = pgTable("site_settings", {
   id: integer("id").primaryKey().default(1),
+  homeVariant: text("home_variant").$type<HomeVariant>().notNull().default("minimal"),
   heroTitle: text("hero_title").notNull().default(""),
   heroSubtitle: text("hero_subtitle").notNull().default(""),
   specialties: jsonb("specialties").$type<Specialty[]>().notNull().default([]),

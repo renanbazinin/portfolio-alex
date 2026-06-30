@@ -29,6 +29,13 @@
       "when": 1782823288146,
       "tag": "0003_last_norrin_radd",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1782825712551,
+      "tag": "0004_black_prodigy",
+      "breakpoints": true
     }
   ]
 }

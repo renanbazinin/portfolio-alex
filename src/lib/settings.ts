@@ -10,6 +10,7 @@ const SETTINGS_ID = 1;
 function mergeWithDefaults(row: SiteSettings | undefined): SiteContent {
   if (!row) return DEFAULT_SITE_SETTINGS;
   return {
+    homeVariant: row.homeVariant || DEFAULT_SITE_SETTINGS.homeVariant,
     heroTitle: row.heroTitle || DEFAULT_SITE_SETTINGS.heroTitle,
     heroSubtitle: row.heroSubtitle || DEFAULT_SITE_SETTINGS.heroSubtitle,
     specialties: row.specialties ?? DEFAULT_SITE_SETTINGS.specialties,

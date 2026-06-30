@@ -7,7 +7,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import type { SiteContent } from "@/lib/site-content";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  HOME_VARIANTS,
+  type HomeVariant,
+  type SiteContent,
+} from "@/lib/site-content";
 
 export function SettingsForm({
   initial,
@@ -88,6 +99,7 @@ export function SettingsForm({
 
     // Trim and drop fully-empty rows so validation doesn't reject blanks.
     const payload = {
+      homeVariant: form.homeVariant,
       heroTitle: form.heroTitle.trim(),
       heroSubtitle: form.heroSubtitle.trim(),
       specialties: form.specialties
@@ -158,6 +170,29 @@ export function SettingsForm({
 
       {/* Home */}
       <Section title="Home">
+        <Field
+          label="Home layout"
+          hint={
+            HOME_VARIANTS.find((v) => v.value === form.homeVariant)?.description
+          }
+        >
+          <Select
+            value={form.homeVariant}
+            onValueChange={(v) => set("homeVariant", v as HomeVariant)}
+          >
+            <SelectTrigger className="w-full sm:w-80">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {HOME_VARIANTS.map((v) => (
+                <SelectItem key={v.value} value={v.value}>
+                  {v.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Field>
+
         <Field label="Hero title">
           <Textarea
             value={form.heroTitle}
