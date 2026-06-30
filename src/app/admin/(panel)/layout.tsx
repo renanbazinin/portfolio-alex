@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { LogoutButton } from "@/components/admin/logout-button";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export default function PanelLayout({
   children,
@@ -33,7 +34,10 @@ export default function PanelLayout({
             View site ↗
           </Link>
         </div>
-        <LogoutButton />
+        <div className="flex items-center gap-3">
+          <ThemeToggle />
+          <LogoutButton />
+        </div>
       </header>
       <main className="flex flex-1 flex-col">{children}</main>
     </div>

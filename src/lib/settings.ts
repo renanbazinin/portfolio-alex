@@ -10,6 +10,9 @@ const SETTINGS_ID = 1;
 function mergeWithDefaults(row: SiteSettings | undefined): SiteContent {
   if (!row) return DEFAULT_SITE_SETTINGS;
   return {
+    heroTitle: row.heroTitle || DEFAULT_SITE_SETTINGS.heroTitle,
+    heroSubtitle: row.heroSubtitle || DEFAULT_SITE_SETTINGS.heroSubtitle,
+    specialties: row.specialties ?? DEFAULT_SITE_SETTINGS.specialties,
     aboutHeading: row.aboutHeading || DEFAULT_SITE_SETTINGS.aboutHeading,
     aboutIntro: row.aboutIntro ?? DEFAULT_SITE_SETTINGS.aboutIntro,
     expertise: row.expertise ?? DEFAULT_SITE_SETTINGS.expertise,

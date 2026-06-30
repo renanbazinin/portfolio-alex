@@ -22,6 +22,13 @@
       "when": 1782821883105,
       "tag": "0002_aromatic_komodo",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1782823288146,
+      "tag": "0003_last_norrin_radd",
+      "breakpoints": true
     }
   ]
 }

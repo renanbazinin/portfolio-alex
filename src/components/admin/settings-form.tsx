@@ -24,6 +24,17 @@ export function SettingsForm({
     setForm((f) => ({ ...f, [key]: val }));
   }
 
+  // --- specialties ---
+  function setSpecialty(i: number, val: { title: string; description: string }) {
+    set("specialties", form.specialties.map((s, idx) => (idx === i ? val : s)));
+  }
+  function addSpecialty() {
+    set("specialties", [...form.specialties, { title: "", description: "" }]);
+  }
+  function removeSpecialty(i: number) {
+    set("specialties", form.specialties.filter((_, idx) => idx !== i));
+  }
+
   // --- intro paragraphs ---
   function setIntro(i: number, val: string) {
     set("aboutIntro", form.aboutIntro.map((p, idx) => (idx === i ? val : p)));
@@ -77,6 +88,14 @@ export function SettingsForm({
 
     // Trim and drop fully-empty rows so validation doesn't reject blanks.
     const payload = {
+      heroTitle: form.heroTitle.trim(),
+      heroSubtitle: form.heroSubtitle.trim(),
+      specialties: form.specialties
+        .map((s) => ({
+          title: s.title.trim(),
+          description: s.description.trim(),
+        }))
+        .filter((s) => s.title),
       aboutHeading: form.aboutHeading.trim(),
       aboutIntro: form.aboutIntro.map((p) => p.trim()).filter(Boolean),
       expertise: form.expertise
@@ -127,7 +146,7 @@ export function SettingsForm({
       <div className="mb-6">
         <h1 className="text-2xl font-semibold tracking-tight">Site content</h1>
         <p className="text-muted-foreground text-sm">
-          Edit your About page, contact details, and social links.
+          Edit your home page, About page, contact details, and social links.
         </p>
       </div>
 
@@ -136,6 +155,59 @@ export function SettingsForm({
           Could not load saved settings: {loadError}. Showing defaults.
         </div>
       ) : null}
+
+      {/* Home */}
+      <Section title="Home">
+        <Field label="Hero title">
+          <Textarea
+            value={form.heroTitle}
+            onChange={(e) => set("heroTitle", e.target.value)}
+            rows={2}
+            placeholder="Alex — bringing stories to life through animation."
+          />
+        </Field>
+        <Field label="Hero subtitle">
+          <Textarea
+            value={form.heroSubtitle}
+            onChange={(e) => set("heroSubtitle", e.target.value)}
+            rows={3}
+            placeholder="A short intro shown under the hero title…"
+          />
+        </Field>
+
+        <div className="space-y-3">
+          <Label>Specialties</Label>
+          {form.specialties.map((s, i) => (
+            <div
+              key={i}
+              className="border-border space-y-2 rounded-md border p-3"
+            >
+              <div className="flex gap-2">
+                <Input
+                  value={s.title}
+                  onChange={(e) =>
+                    setSpecialty(i, { ...s, title: e.target.value })
+                  }
+                  placeholder="Title (e.g. 3D Animation)"
+                />
+                <RemoveButton
+                  onClick={() => removeSpecialty(i)}
+                  label="specialty"
+                />
+              </div>
+              <Textarea
+                value={s.description}
+                onChange={(e) =>
+                  setSpecialty(i, { ...s, description: e.target.value })
+                }
+                rows={2}
+                placeholder="Describe this specialty…"
+              />
+            </div>
+          ))}
+          <AddButton onClick={addSpecialty}>Add specialty</AddButton>
+        </div>
+      </Section>
 
       {/* About */}
       <Section title="About">

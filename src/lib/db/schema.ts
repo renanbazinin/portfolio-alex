@@ -43,6 +43,7 @@ export type NewProject = typeof projects.$inferInsert;
 export type ExpertiseGroup = { heading: string; items: string[] };
 export type ApproachItem = { n: string; title: string; body: string };
 export type SocialLink = { label: string; href: string };
+export type Specialty = { title: string; description: string };
 
 /**
  * Singleton row (id = 1) holding admin-editable site content: About copy,
@@ -51,6 +52,9 @@ export type SocialLink = { label: string; href: string };
  */
 export const siteSettings = pgTable("site_settings", {
   id: integer("id").primaryKey().default(1),
+  heroTitle: text("hero_title").notNull().default(""),
+  heroSubtitle: text("hero_subtitle").notNull().default(""),
+  specialties: jsonb("specialties").$type<Specialty[]>().notNull().default([]),
   aboutHeading: text("about_heading").notNull().default(""),
   aboutIntro: jsonb("about_intro").$type<string[]>().notNull().default([]),
   expertise: jsonb("expertise").$type<ExpertiseGroup[]>().notNull().default([]),

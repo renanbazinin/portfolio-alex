@@ -57,7 +57,15 @@ const socialLinkSchema = z.object({
   href: z.url("Enter a valid URL"),
 });
 
+const specialtySchema = z.object({
+  title: z.string().trim().min(1, "Title is required"),
+  description: z.string().trim().default(""),
+});
+
 export const siteSettingsInputSchema = z.object({
+  heroTitle: z.string().trim().default(""),
+  heroSubtitle: z.string().trim().default(""),
+  specialties: z.array(specialtySchema).default([]),
   aboutHeading: z.string().trim().default(""),
   aboutIntro: z.array(z.string().trim().min(1)).default([]),
   expertise: z.array(expertiseGroupSchema).default([]),

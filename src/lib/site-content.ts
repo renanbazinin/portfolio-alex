@@ -2,10 +2,14 @@ import type {
   ApproachItem,
   ExpertiseGroup,
   SocialLink,
+  Specialty,
 } from "@/lib/db/schema";
 
 /** The editable shape of site content, independent of DB row metadata. */
 export type SiteContent = {
+  heroTitle: string;
+  heroSubtitle: string;
+  specialties: Specialty[];
   aboutHeading: string;
   aboutIntro: string[];
   expertise: ExpertiseGroup[];
@@ -23,6 +27,26 @@ export type SiteContent = {
  * exists, so the public site renders correctly before any edit is made.
  */
 export const DEFAULT_SITE_SETTINGS: SiteContent = {
+  heroTitle: "Alex — bringing stories to life through animation.",
+  heroSubtitle:
+    "With expertise spanning both 3D and classic animation techniques, I create compelling visual narratives — from character animation to complex motion design, crafted with precision and artistic vision.",
+  specialties: [
+    {
+      title: "3D Animation",
+      description:
+        "Character rigging, motion capture, and dynamic simulations using industry-standard tools like Maya, Blender, and Houdini.",
+    },
+    {
+      title: "Classic Animation",
+      description:
+        "Traditional frame-by-frame animation with hand-drawn artistry, bringing timeless techniques to modern storytelling.",
+    },
+    {
+      title: "Motion Design",
+      description:
+        "Fluid transitions, dynamic typography, and visual effects that enhance narrative impact and viewer engagement.",
+    },
+  ],
   aboutHeading: "Bringing imagination to life.",
   aboutIntro: [
     "With over 8 years of experience in the animation industry, I've had the privilege of working on a diverse range of projects spanning feature films, commercials, video games, and independent productions. My journey began with a fascination for both traditional hand-drawn animation and the emerging world of 3D computer graphics.",

@@ -11,9 +11,7 @@ export async function SiteFooter() {
     content = DEFAULT_SITE_SETTINGS;
   }
 
-  const identity = [content.name, content.role, content.location]
-    .filter(Boolean)
-    .join(" · ");
+  const subtitle = [content.role, content.location].filter(Boolean).join(" · ");
 
   const links = [
     ...(content.contactEmail
@@ -23,26 +21,44 @@ export async function SiteFooter() {
   ];
 
   return (
-    <footer className="border-border/60 mt-24 border-t py-10">
-      <Container className="flex flex-col items-center justify-between gap-4 sm:flex-row">
-        <p className="text-muted-foreground text-sm">
-          © {new Date().getFullYear()} {identity}
-        </p>
-        <div className="flex items-center gap-6">
-          {links.map((c) => (
-            <a
-              key={c.label}
-              href={c.href}
-              target={c.href.startsWith("http") ? "_blank" : undefined}
-              rel="noreferrer"
-              className="text-muted-foreground hover:text-foreground text-sm transition-colors"
-            >
-              {c.label}
-            </a>
-          ))}
+    <footer className="border-border/60 bg-card/40 mt-24 border-t">
+      <Container className="py-14">
+        <div className="grid grid-cols-1 gap-10 sm:grid-cols-2">
+          <div>
+            <p className="gradient-text text-xl font-bold tracking-[0.12em]">
+              {content.name || "Alex"}
+            </p>
+            {subtitle ? (
+              <p className="text-muted-foreground mt-2 text-sm">{subtitle}</p>
+            ) : null}
+          </div>
+
+          <div className="sm:justify-self-end">
+            <h4 className="mb-3 text-sm font-semibold">Connect</h4>
+            <div className="flex flex-col gap-2.5">
+              {links.map((c) => (
+                <a
+                  key={c.label}
+                  href={c.href}
+                  target={c.href.startsWith("http") ? "_blank" : undefined}
+                  rel="noreferrer"
+                  className="text-muted-foreground hover:text-[var(--accent-primary)] text-sm transition-colors"
+                >
+                  {c.label}
+                </a>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="border-border/60 mt-10 flex items-center justify-between border-t pt-6">
+          <p className="text-muted-foreground text-xs">
+            © {new Date().getFullYear()} {content.name || "Alex"}. All rights
+            reserved.
+          </p>
           <Link
             href="/admin"
-            className="text-muted-foreground/60 hover:text-foreground text-sm transition-colors"
+            className="text-muted-foreground/60 hover:text-foreground text-xs transition-colors"
           >
             Admin
           </Link>
