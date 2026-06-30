@@ -27,6 +27,12 @@ export default function PanelLayout({
             Site content
           </Link>
           <Link
+            href="/admin/preview"
+            className="text-muted-foreground hover:text-foreground text-sm"
+          >
+            Preview
+          </Link>
+          <Link
             href="/"
             target="_blank"
             className="text-muted-foreground hover:text-foreground text-sm"

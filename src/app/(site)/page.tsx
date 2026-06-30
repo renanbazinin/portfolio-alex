@@ -9,7 +9,13 @@ import { SectionHeading } from "@/components/site/section-heading";
 import { ProjectCard } from "@/components/site/project-card";
 import { Button } from "@/components/ui/button";
 import { getSiteSettings } from "@/lib/settings";
-import { DEFAULT_SITE_SETTINGS, type SiteContent } from "@/lib/site-content";
+import {
+  DEFAULT_SITE_SETTINGS,
+  HOME_VARIANTS,
+  type HomeVariant,
+  type SiteContent,
+} from "@/lib/site-content";
+import { isAuthenticated } from "@/lib/auth/guard";
 
 export const dynamic = "force-dynamic";
 
@@ -52,16 +58,28 @@ function CenteredHero({ content }: { content: SiteContent }) {
     <section className="border-border/60 relative flex min-h-[82vh] items-center overflow-hidden border-b">
       <HeroGlow />
       <Container className="relative z-10 text-center">
-        <p className="text-muted-foreground mb-6 text-xs font-medium tracking-[0.3em] uppercase">
+        <p
+          className="animate-fade-up text-muted-foreground mb-6 text-xs font-medium tracking-[0.3em] uppercase"
+          style={{ animationDelay: "0ms" }}
+        >
           {content.role} · 3D &amp; Classic
         </p>
-        <h1 className="gradient-text text-6xl font-bold tracking-tight sm:text-8xl">
+        <h1
+          className="animate-fade-up gradient-text text-6xl font-bold tracking-tight sm:text-8xl"
+          style={{ animationDelay: "90ms" }}
+        >
           {content.name}
         </h1>
-        <p className="text-foreground/90 mt-4 text-xl font-medium tracking-[0.35em] uppercase sm:text-2xl">
+        <p
+          className="animate-fade-up text-foreground/90 mt-4 text-xl font-medium tracking-[0.35em] uppercase sm:text-2xl"
+          style={{ animationDelay: "180ms" }}
+        >
           {content.role}
         </p>
-        <div className="mt-10 flex flex-wrap justify-center gap-3">
+        <div
+          className="animate-fade-up mt-10 flex flex-wrap justify-center gap-3"
+          style={{ animationDelay: "270ms" }}
+        >
           <HeroActions name={content.name} />
         </div>
       </Container>
@@ -75,16 +93,28 @@ function HeadlineHero({ content }: { content: SiteContent }) {
     <section className="border-border/60 relative overflow-hidden border-b">
       <HeroGlow />
       <Container className="relative z-10 py-24 sm:py-32">
-        <p className="text-muted-foreground mb-5 text-xs font-medium tracking-[0.25em] uppercase">
+        <p
+          className="animate-fade-up text-muted-foreground mb-5 text-xs font-medium tracking-[0.25em] uppercase"
+          style={{ animationDelay: "0ms" }}
+        >
           {content.role} · 3D &amp; Classic
         </p>
-        <h1 className="max-w-3xl text-4xl font-semibold tracking-tight text-balance sm:text-6xl">
+        <h1
+          className="animate-fade-up max-w-3xl text-4xl font-semibold tracking-tight text-balance sm:text-6xl"
+          style={{ animationDelay: "90ms" }}
+        >
           {content.heroTitle}
         </h1>
-        <p className="text-muted-foreground mt-6 max-w-xl text-lg">
+        <p
+          className="animate-fade-up text-muted-foreground mt-6 max-w-xl text-lg"
+          style={{ animationDelay: "180ms" }}
+        >
           {content.heroSubtitle}
         </p>
-        <div className="mt-9 flex flex-wrap gap-3">
+        <div
+          className="animate-fade-up mt-9 flex flex-wrap gap-3"
+          style={{ animationDelay: "270ms" }}
+        >
           <HeroActions name={content.name} />
         </div>
       </Container>
@@ -92,7 +122,11 @@ function HeadlineHero({ content }: { content: SiteContent }) {
   );
 }
 
-export default async function HomePage() {
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ previewVariant?: string }>;
+}) {
   let featured: Project[] = [];
   let published: Project[] = [];
   let content: SiteContent = DEFAULT_SITE_SETTINGS;
@@ -108,7 +142,15 @@ export default async function HomePage() {
     content = DEFAULT_SITE_SETTINGS;
   }
 
-  const variant = content.homeVariant;
+  // Authenticated admins can preview a layout via ?previewVariant without
+  // persisting it; the override is render-only and ignored for visitors.
+  const { previewVariant } = await searchParams;
+  const isKnownVariant = HOME_VARIANTS.some((v) => v.value === previewVariant);
+  const variant: HomeVariant =
+    isKnownVariant && (await isAuthenticated())
+      ? (previewVariant as HomeVariant)
+      : content.homeVariant;
+
   const centered = variant === "minimal" || variant === "hero-work";
   const showProjects = variant !== "minimal";
   const showSpecialties = variant === "standard" || variant === "expanded";
@@ -149,8 +191,8 @@ export default async function HomePage() {
               </div>
             ) : (
               <div className="grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
-                {showcase.map((p) => (
-                  <ProjectCard key={p.id} project={p} />
+                {showcase.map((p, i) => (
+                  <ProjectCard key={p.id} project={p} index={i} />
                 ))}
               </div>
             )}

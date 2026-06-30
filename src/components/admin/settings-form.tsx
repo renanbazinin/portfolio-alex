@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -155,11 +156,16 @@ export function SettingsForm({
 
   return (
     <form onSubmit={handleSubmit} className="mx-auto w-full max-w-2xl px-4 py-8">
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold tracking-tight">Site content</h1>
-        <p className="text-muted-foreground text-sm">
-          Edit your home page, About page, contact details, and social links.
-        </p>
+      <div className="mb-6 flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Site content</h1>
+          <p className="text-muted-foreground text-sm">
+            Edit your home page, About page, contact details, and social links.
+          </p>
+        </div>
+        <Button type="button" variant="outline" size="sm" asChild>
+          <Link href="/admin/preview">Preview site ↗</Link>
+        </Button>
       </div>
 
       {loadError ? (
