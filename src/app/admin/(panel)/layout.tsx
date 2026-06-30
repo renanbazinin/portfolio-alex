@@ -14,6 +14,18 @@ export default function PanelLayout({
             Admin
           </Link>
           <Link
+            href="/admin"
+            className="text-muted-foreground hover:text-foreground text-sm"
+          >
+            Projects
+          </Link>
+          <Link
+            href="/admin/settings"
+            className="text-muted-foreground hover:text-foreground text-sm"
+          >
+            Site content
+          </Link>
+          <Link
             href="/"
             target="_blank"
             className="text-muted-foreground hover:text-foreground text-sm"

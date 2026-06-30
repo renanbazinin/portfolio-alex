@@ -15,7 +15,9 @@ export async function proxy(request: NextRequest) {
 
   // Mutating API methods require a session (login/logout handled in their routes).
   const isWriteApi =
-    pathname.startsWith("/api/projects") || pathname.startsWith("/api/upload");
+    pathname.startsWith("/api/projects") ||
+    pathname.startsWith("/api/upload") ||
+    pathname.startsWith("/api/settings");
   const isWriteMethod = request.method !== "GET" && request.method !== "HEAD";
 
   if (isAdminPage && !isLoginPage && !authed) {
@@ -40,5 +42,10 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/api/projects/:path*", "/api/upload/:path*"],
+  matcher: [
+    "/admin/:path*",
+    "/api/projects/:path*",
+    "/api/upload/:path*",
+    "/api/settings/:path*",
+  ],
 };

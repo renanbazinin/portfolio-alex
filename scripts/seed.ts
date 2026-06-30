@@ -1,7 +1,8 @@
 import "dotenv/config";
 import { neon } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
-import { projects } from "../src/lib/db/schema";
+import { projects, siteSettings } from "../src/lib/db/schema";
+import { DEFAULT_SITE_SETTINGS } from "../src/lib/site-content";
 
 /**
  * Alex's real project catalog, consolidated from the alex-portfolio repo.
@@ -78,7 +79,7 @@ async function main() {
   }
 
   const sql = neon(process.env.DATABASE_URL);
-  const db = drizzle(sql, { schema: { projects } });
+  const db = drizzle(sql, { schema: { projects, siteSettings } });
 
   console.log("Clearing existing projects…");
   await db.delete(projects);
@@ -88,6 +89,12 @@ async function main() {
     await db.insert(projects).values({ ...p, sortOrder: i });
     console.log(`  + ${p.title}${p.featured ? " ★" : ""}`);
   }
+
+  console.log("Seeding default site settings…");
+  await db
+    .insert(siteSettings)
+    .values({ id: 1, ...DEFAULT_SITE_SETTINGS })
+    .onConflictDoNothing({ target: siteSettings.id });
 
   console.log(`Seed complete. Inserted ${PROJECTS.length} projects.`);
   process.exit(0);

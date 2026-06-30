@@ -15,6 +15,13 @@
       "when": 1782757560322,
       "tag": "0001_daily_vision",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1782821883105,
+      "tag": "0002_aromatic_komodo",
+      "breakpoints": true
     }
   ]
 }
