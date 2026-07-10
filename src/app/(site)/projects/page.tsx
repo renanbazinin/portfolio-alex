@@ -19,14 +19,17 @@ export default async function ProjectsPage() {
 
   return (
     <Container className="py-16">
-      <header className="mb-10">
-        <p className="text-muted-foreground mb-2 text-xs font-medium tracking-[0.2em] uppercase">
+      <header className="mb-12">
+        <p className="anim-rise text-muted-foreground mb-3 font-mono text-xs font-medium tracking-[0.25em] uppercase">
+          <span aria-hidden className="text-accent-brand">
+            /{" "}
+          </span>
           Work
         </p>
-        <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
+        <h1 className="anim-rise anim-delay-1 font-display text-4xl tracking-tight sm:text-6xl">
           Projects
         </h1>
-        <p className="text-muted-foreground mt-2 max-w-xl">
+        <p className="anim-rise anim-delay-2 text-muted-foreground mt-4 max-w-xl">
           Browse the full archive. Search or filter by category.
         </p>
       </header>

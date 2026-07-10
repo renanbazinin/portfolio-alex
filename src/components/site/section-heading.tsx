@@ -8,14 +8,17 @@ export function SectionHeading({
   action?: React.ReactNode;
 }) {
   return (
-    <div className="mb-8 flex items-end justify-between gap-4">
+    <div className="mb-10 flex items-end justify-between gap-4">
       <div>
         {kicker ? (
-          <p className="text-muted-foreground mb-2 text-xs font-medium tracking-[0.2em] uppercase">
+          <p className="text-muted-foreground mb-3 font-mono text-xs font-medium tracking-[0.25em] uppercase">
+            <span aria-hidden className="text-accent-brand">
+              /{" "}
+            </span>
             {kicker}
           </p>
         ) : null}
-        <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+        <h2 className="font-display text-3xl tracking-tight sm:text-4xl">
           {title}
         </h2>
       </div>

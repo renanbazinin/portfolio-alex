@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Container } from "@/components/site/container";
 import { Button } from "@/components/ui/button";
+import { Reveal, StaggerGroup, StaggerItem } from "@/components/motion/reveal";
 
 export const metadata = {
   title: "About",
@@ -43,17 +44,14 @@ const EXPERTISE = [
 
 const APPROACH = [
   {
-    n: "01",
     title: "Story First",
     body: "Every animation decision serves the narrative. Technical excellence means nothing without emotional truth.",
   },
   {
-    n: "02",
     title: "Attention to Detail",
     body: "The magic is in the subtleties — secondary motion, timing variations, and nuanced expressions that bring characters to life.",
   },
   {
-    n: "03",
     title: "Collaborative Spirit",
     body: "Great animation is a team effort. I thrive on feedback and love working with directors, artists, and technicians to achieve a shared vision.",
   },
@@ -63,14 +61,17 @@ export default function AboutPage() {
   return (
     <Container className="py-16">
       <div className="max-w-2xl">
-        <p className="text-muted-foreground mb-2 text-xs font-medium tracking-[0.2em] uppercase">
+        <p className="anim-rise text-muted-foreground mb-3 font-mono text-xs font-medium tracking-[0.25em] uppercase">
+          <span aria-hidden className="text-accent-brand">
+            /{" "}
+          </span>
           About
         </p>
-        <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
+        <h1 className="anim-rise anim-delay-1 font-display text-4xl leading-[1.05] tracking-tight sm:text-6xl">
           Bringing imagination to life.
         </h1>
 
-        <div className="text-foreground/80 mt-6 space-y-4 text-lg leading-relaxed">
+        <div className="anim-rise anim-delay-2 text-foreground/80 mt-8 space-y-4 text-lg leading-relaxed">
           <p>
             With over 8 years of experience in the animation industry, I&apos;ve
             had the privilege of working on a diverse range of projects spanning
@@ -96,14 +97,21 @@ export default function AboutPage() {
         </div>
       </div>
 
-      <section className="mt-16">
-        <h2 className="text-muted-foreground mb-6 text-xs font-medium tracking-[0.2em] uppercase">
-          Expertise
-        </h2>
-        <div className="grid grid-cols-1 gap-10 sm:grid-cols-3">
+      <section className="mt-24">
+        <Reveal>
+          <h2 className="text-muted-foreground mb-8 font-mono text-xs font-medium tracking-[0.25em] uppercase">
+            <span aria-hidden className="text-accent-brand">
+              /{" "}
+            </span>
+            Expertise
+          </h2>
+        </Reveal>
+        <StaggerGroup className="grid grid-cols-1 gap-10 sm:grid-cols-3">
           {EXPERTISE.map((group) => (
-            <div key={group.heading}>
-              <h3 className="mb-3 font-medium">{group.heading}</h3>
+            <StaggerItem key={group.heading}>
+              <h3 className="font-display mb-4 text-xl tracking-tight">
+                {group.heading}
+              </h3>
               <ul className="space-y-2">
                 {group.items.map((item) => (
                   <li key={item} className="text-muted-foreground text-sm">
@@ -111,35 +119,48 @@ export default function AboutPage() {
                   </li>
                 ))}
               </ul>
-            </div>
+            </StaggerItem>
           ))}
-        </div>
+        </StaggerGroup>
       </section>
 
-      <section className="mt-16">
-        <h2 className="text-muted-foreground mb-6 text-xs font-medium tracking-[0.2em] uppercase">
-          My Approach
-        </h2>
-        <div className="grid grid-cols-1 gap-8 sm:grid-cols-3">
-          {APPROACH.map((a) => (
-            <div key={a.n}>
-              <div className="text-muted-foreground/50 text-2xl font-semibold tabular-nums">
-                {a.n}
-              </div>
-              <h3 className="mt-2 font-medium">{a.title}</h3>
-              <p className="text-muted-foreground mt-2 text-sm leading-relaxed">
+      <section className="mt-24">
+        <Reveal>
+          <h2 className="text-muted-foreground mb-2 font-mono text-xs font-medium tracking-[0.25em] uppercase">
+            <span aria-hidden className="text-accent-brand">
+              /{" "}
+            </span>
+            My Approach
+          </h2>
+        </Reveal>
+        <div>
+          {APPROACH.map((a, i) => (
+            <Reveal
+              key={a.title}
+              className="border-border/60 grid grid-cols-1 gap-x-10 gap-y-3 border-t py-8 first:border-t-0 sm:grid-cols-[6rem_1fr_2fr] sm:items-baseline"
+            >
+              <span
+                aria-hidden
+                className="text-accent-brand font-mono text-sm tabular-nums"
+              >
+                {String(i + 1).padStart(2, "0")}
+              </span>
+              <h3 className="font-display text-2xl tracking-tight">
+                {a.title}
+              </h3>
+              <p className="text-muted-foreground text-sm leading-relaxed">
                 {a.body}
               </p>
-            </div>
+            </Reveal>
           ))}
         </div>
       </section>
 
-      <div className="mt-16">
-        <Button asChild>
+      <Reveal className="mt-20">
+        <Button asChild size="lg" className="rounded-full px-7">
           <Link href="/projects">See the work →</Link>
         </Button>
-      </div>
+      </Reveal>
     </Container>
   );
 }

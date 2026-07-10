@@ -1,40 +1,55 @@
 import Link from "next/link";
+import { ArrowUpRight } from "lucide-react";
+import { siteConfig } from "@/lib/site-config";
 import { Container } from "./container";
-
-const CONTACT = [
-  { href: "mailto:alex@example.com", label: "Email" },
-  { href: "https://vimeo.com", label: "Vimeo" },
-  { href: "https://instagram.com", label: "Instagram" },
-  { href: "https://linkedin.com", label: "LinkedIn" },
-];
 
 export function SiteFooter() {
   return (
-    <footer className="border-border/60 mt-24 border-t py-10">
-      <Container className="flex flex-col items-center justify-between gap-4 sm:flex-row">
-        <p className="text-muted-foreground text-sm">
-          © {new Date().getFullYear()} Alex · Animator · Los Angeles, CA
+    <footer className="border-border/60 mt-32 border-t">
+      <Container className="py-16 sm:py-24">
+        <p className="text-muted-foreground font-mono text-xs font-medium tracking-[0.25em] uppercase">
+          Get in touch
         </p>
-        <div className="flex items-center gap-6">
-          {CONTACT.map((c) => (
+        <a
+          href={`mailto:${siteConfig.email}`}
+          className="link-underline font-display mt-4 inline-block text-3xl tracking-tight sm:text-5xl"
+        >
+          Have a story that needs motion?
+        </a>
+
+        <div className="mt-12 flex flex-wrap items-center gap-x-8 gap-y-3">
+          {siteConfig.socials.map((s) => (
             <a
-              key={c.label}
-              href={c.href}
-              target={c.href.startsWith("http") ? "_blank" : undefined}
+              key={s.label}
+              href={s.href}
+              target="_blank"
               rel="noreferrer"
-              className="text-muted-foreground hover:text-foreground text-sm transition-colors"
+              className="group text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-sm transition-colors duration-200"
             >
-              {c.label}
+              {s.label}
+              <ArrowUpRight
+                aria-hidden
+                className="size-3.5 transition-transform duration-200 ease-out group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+              />
             </a>
           ))}
+        </div>
+      </Container>
+
+      <div className="border-border/60 border-t">
+        <Container className="flex flex-col items-center justify-between gap-3 py-6 sm:flex-row">
+          <p className="text-muted-foreground text-sm">
+            © {new Date().getFullYear()} {siteConfig.name} · {siteConfig.role} ·{" "}
+            {siteConfig.location}
+          </p>
           <Link
             href="/admin"
             className="text-muted-foreground/60 hover:text-foreground text-sm transition-colors"
           >
             Admin
           </Link>
-        </div>
-      </Container>
+        </Container>
+      </div>
     </footer>
   );
 }
