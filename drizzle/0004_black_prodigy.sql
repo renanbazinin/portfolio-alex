@@ -1,0 +1,1 @@
+ALTER TABLE "site_settings" ADD COLUMN "home_variant" text DEFAULT 'minimal' NOT NULL;

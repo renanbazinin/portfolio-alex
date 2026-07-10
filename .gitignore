@@ -32,6 +32,11 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+# bare env file holding local secrets (DATABASE_URL, SESSION_SECRET, etc.)
+/env
+# stray scratch scripts used during local verification
+/_*.ts
+/_*.mjs
 
 # vercel
 .vercel

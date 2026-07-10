@@ -40,3 +40,46 @@ export function slugify(value: string): string {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
 }
+
+const expertiseGroupSchema = z.object({
+  heading: z.string().trim().min(1, "Heading is required"),
+  items: z.array(z.string().trim().min(1)).default([]),
+});
+
+const approachItemSchema = z.object({
+  n: z.string().trim().default(""),
+  title: z.string().trim().min(1, "Title is required"),
+  body: z.string().trim().default(""),
+});
+
+const socialLinkSchema = z.object({
+  label: z.string().trim().min(1, "Label is required"),
+  href: z.url("Enter a valid URL"),
+});
+
+const specialtySchema = z.object({
+  title: z.string().trim().min(1, "Title is required"),
+  description: z.string().trim().default(""),
+});
+
+export const siteSettingsInputSchema = z.object({
+  homeVariant: z
+    .enum(["minimal", "hero-work", "standard", "expanded"])
+    .default("minimal"),
+  heroTitle: z.string().trim().default(""),
+  heroSubtitle: z.string().trim().default(""),
+  specialties: z.array(specialtySchema).default([]),
+  aboutHeading: z.string().trim().default(""),
+  aboutIntro: z.array(z.string().trim().min(1)).default([]),
+  expertise: z.array(expertiseGroupSchema).default([]),
+  approach: z.array(approachItemSchema).default([]),
+  name: z.string().trim().default(""),
+  role: z.string().trim().default(""),
+  location: z.string().trim().default(""),
+  contactEmail: z
+    .union([z.email("Enter a valid email"), z.literal("")])
+    .default(""),
+  socialLinks: z.array(socialLinkSchema).default([]),
+});
+
+export type SiteSettingsInput = z.infer<typeof siteSettingsInputSchema>;

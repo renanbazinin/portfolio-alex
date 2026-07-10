@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { LogoutButton } from "@/components/admin/logout-button";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export default function PanelLayout({
   children,
@@ -14,6 +15,24 @@ export default function PanelLayout({
             Admin
           </Link>
           <Link
+            href="/admin"
+            className="text-muted-foreground hover:text-foreground text-sm"
+          >
+            Projects
+          </Link>
+          <Link
+            href="/admin/settings"
+            className="text-muted-foreground hover:text-foreground text-sm"
+          >
+            Site content
+          </Link>
+          <Link
+            href="/admin/preview"
+            className="text-muted-foreground hover:text-foreground text-sm"
+          >
+            Preview
+          </Link>
+          <Link
             href="/"
             target="_blank"
             className="text-muted-foreground hover:text-foreground text-sm"
@@ -21,7 +40,10 @@ export default function PanelLayout({
             View site ↗
           </Link>
         </div>
-        <LogoutButton />
+        <div className="flex items-center gap-3">
+          <ThemeToggle />
+          <LogoutButton />
+        </div>
       </header>
       <main className="flex flex-1 flex-col">{children}</main>
     </div>

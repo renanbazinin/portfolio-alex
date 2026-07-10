@@ -15,6 +15,27 @@
       "when": 1782757560322,
       "tag": "0001_daily_vision",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1782821883105,
+      "tag": "0002_aromatic_komodo",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1782823288146,
+      "tag": "0003_last_norrin_radd",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1782825712551,
+      "tag": "0004_black_prodigy",
+      "breakpoints": true
     }
   ]
 }
