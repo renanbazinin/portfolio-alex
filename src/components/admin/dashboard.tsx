@@ -1,8 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import type { Project } from "@/lib/db/schema";
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ConfirmDialog } from "@/components/admin/confirm-dialog";
+
+type PendingAction = {
+  id: number;
+  action: "publish" | "feature" | "delete" | "reorder";
+};
 
 export function Dashboard({
   initialProjects,
@@ -23,11 +30,11 @@ export function Dashboard({
   initialProjects: Project[];
   loadError: string | null;
 }) {
-  const router = useRouter();
   const [projects, setProjects] = useState(initialProjects);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("all");
-  const [busyId, setBusyId] = useState<number | null>(null);
+  const [pending, setPending] = useState<PendingAction | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Project | null>(null);
 
   const categories = useMemo(
     () => [...new Set(projects.map((p) => p.category).filter(Boolean))],
@@ -47,8 +54,16 @@ export function Dashboard({
     });
   }, [projects, search, category]);
 
+  function isPending(p: Project, action: PendingAction["action"]) {
+    return pending?.id === p.id && pending.action === action;
+  }
+  function rowBusy(p: Project) {
+    return pending?.id === p.id;
+  }
+
   async function togglePublish(p: Project) {
-    setBusyId(p.id);
+    if (pending) return;
+    setPending({ id: p.id, action: "publish" });
     const next = p.publishStatus === "published" ? "draft" : "published";
     try {
       const res = await fetch(`/api/projects/${p.id}`, {
@@ -60,16 +75,16 @@ export function Dashboard({
       const updated = (await res.json()) as Project;
       setProjects((prev) => prev.map((x) => (x.id === p.id ? updated : x)));
       toast.success(next === "published" ? "Published" : "Moved to draft");
-      router.refresh();
     } catch {
       toast.error("Failed to update status");
     } finally {
-      setBusyId(null);
+      setPending(null);
     }
   }
 
   async function toggleFeatured(p: Project) {
-    setBusyId(p.id);
+    if (pending) return;
+    setPending({ id: p.id, action: "feature" });
     try {
       const res = await fetch(`/api/projects/${p.id}`, {
         method: "PUT",
@@ -79,38 +94,43 @@ export function Dashboard({
       if (!res.ok) throw new Error();
       const updated = (await res.json()) as Project;
       setProjects((prev) => prev.map((x) => (x.id === p.id ? updated : x)));
-      toast.success(updated.featured ? "Added to featured" : "Removed from featured");
-      router.refresh();
+      toast.success(
+        updated.featured ? "Added to featured" : "Removed from featured",
+      );
     } catch {
       toast.error("Failed to update featured");
     } finally {
-      setBusyId(null);
+      setPending(null);
     }
   }
 
-  async function remove(p: Project) {
-    if (!confirm(`Delete "${p.title}"? This cannot be undone.`)) return;
-    setBusyId(p.id);
+  async function confirmDelete() {
+    const p = deleteTarget;
+    if (!p) return;
+    setPending({ id: p.id, action: "delete" });
     try {
       const res = await fetch(`/api/projects/${p.id}`, { method: "DELETE" });
       if (!res.ok) throw new Error();
       setProjects((prev) => prev.filter((x) => x.id !== p.id));
+      setDeleteTarget(null);
       toast.success("Project deleted");
-      router.refresh();
     } catch {
       toast.error("Failed to delete");
     } finally {
-      setBusyId(null);
+      setPending(null);
     }
   }
 
   async function move(index: number, dir: -1 | 1) {
+    if (pending) return;
     const target = index + dir;
     if (target < 0 || target >= projects.length) return;
+    const previous = projects;
     const reordered = [...projects];
     const [item] = reordered.splice(index, 1);
     reordered.splice(target, 0, item);
     setProjects(reordered);
+    setPending({ id: item.id, action: "reorder" });
     try {
       const res = await fetch("/api/projects/reorder", {
         method: "POST",
@@ -119,10 +139,11 @@ export function Dashboard({
       });
       if (!res.ok) throw new Error();
       toast.success("Order saved");
-      router.refresh();
     } catch {
       toast.error("Failed to save order");
-      setProjects(projects);
+      setProjects(previous);
+    } finally {
+      setPending(null);
     }
   }
 
@@ -150,7 +171,7 @@ export function Dashboard({
         </div>
       ) : null}
 
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row">
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
         <Input
           placeholder="Search…"
           value={search}
@@ -170,6 +191,11 @@ export function Dashboard({
             ))}
           </SelectContent>
         </Select>
+        {!reorderEnabled ? (
+          <p className="text-muted-foreground text-xs sm:ml-auto">
+            Clear search/filter to reorder.
+          </p>
+        ) : null}
       </div>
 
       {filtered.length === 0 ? (
@@ -182,14 +208,15 @@ export function Dashboard({
             <li
               key={p.id}
               className="flex items-center gap-3 p-3"
-              aria-busy={busyId === p.id}
+              aria-busy={rowBusy(p)}
             >
               <div className="bg-muted h-12 w-16 shrink-0 overflow-hidden rounded">
                 {p.thumbnail ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
+                  <Image
                     src={p.thumbnail}
                     alt=""
+                    width={128}
+                    height={96}
                     className="h-full w-full object-cover"
                   />
                 ) : null}
@@ -214,40 +241,65 @@ export function Dashboard({
               </div>
 
               <div className="flex items-center gap-1">
+                {reorderEnabled ? (
+                  <>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      disabled={rowBusy(p) || i === 0}
+                      onClick={() => move(i, -1)}
+                      title="Move up"
+                    >
+                      {isPending(p, "reorder") ? (
+                        <Loader2 className="size-3.5 animate-spin" />
+                      ) : (
+                        "↑"
+                      )}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      disabled={rowBusy(p) || i === filtered.length - 1}
+                      onClick={() => move(i, 1)}
+                      title="Move down"
+                    >
+                      ↓
+                    </Button>
+                  </>
+                ) : null}
                 <Button
                   variant="ghost"
                   size="sm"
-                  disabled={!reorderEnabled || i === 0}
-                  onClick={() => move(i, -1)}
-                  title="Move up"
-                >
-                  ↑
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  disabled={!reorderEnabled || i === filtered.length - 1}
-                  onClick={() => move(i, 1)}
-                  title="Move down"
-                >
-                  ↓
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  disabled={busyId === p.id}
+                  disabled={rowBusy(p)}
                   onClick={() => toggleFeatured(p)}
                   title={p.featured ? "Remove from featured" : "Add to featured"}
                 >
-                  {p.featured ? "★" : "☆"}
+                  {isPending(p, "feature") ? (
+                    <Loader2 className="size-3.5 animate-spin" />
+                  ) : p.featured ? (
+                    "★"
+                  ) : (
+                    "☆"
+                  )}
                 </Button>
                 <Button
                   variant="outline"
                   size="sm"
-                  disabled={busyId === p.id}
+                  disabled={rowBusy(p)}
                   onClick={() => togglePublish(p)}
                 >
-                  {p.publishStatus === "published" ? "Unpublish" : "Publish"}
+                  {isPending(p, "publish") ? (
+                    <>
+                      <Loader2 className="size-3.5 animate-spin" />
+                      {p.publishStatus === "published"
+                        ? "Unpublishing…"
+                        : "Publishing…"}
+                    </>
+                  ) : p.publishStatus === "published" ? (
+                    "Unpublish"
+                  ) : (
+                    "Publish"
+                  )}
                 </Button>
                 <Button variant="outline" size="sm" asChild>
                   <Link href={`/admin/projects/${p.id}/edit`}>Edit</Link>
@@ -256,8 +308,8 @@ export function Dashboard({
                   variant="ghost"
                   size="sm"
                   className="text-destructive"
-                  disabled={busyId === p.id}
-                  onClick={() => remove(p)}
+                  disabled={rowBusy(p)}
+                  onClick={() => setDeleteTarget(p)}
                 >
                   Delete
                 </Button>
@@ -266,11 +318,24 @@ export function Dashboard({
           ))}
         </ul>
       )}
-      {!reorderEnabled ? (
-        <p className="text-muted-foreground mt-2 text-xs">
-          Clear search/filter to reorder projects.
-        </p>
-      ) : null}
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        onOpenChange={(open) => {
+          if (!open) setDeleteTarget(null);
+        }}
+        title="Delete project?"
+        description={
+          deleteTarget
+            ? `"${deleteTarget.title}" will be permanently deleted. This cannot be undone.`
+            : ""
+        }
+        confirmLabel="Delete"
+        pendingLabel="Deleting…"
+        destructive
+        pending={deleteTarget !== null && isPending(deleteTarget, "delete")}
+        onConfirm={confirmDelete}
+      />
     </div>
   );
 }

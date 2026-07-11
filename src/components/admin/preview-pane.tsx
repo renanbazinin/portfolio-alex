@@ -108,22 +108,27 @@ export function PreviewPane({
         </div>
 
         {/* Home layout selector (only meaningful on the home page) */}
-        <Select
-          value={variant}
-          onValueChange={(v) => setVariant(v as HomeVariant)}
-          disabled={page !== "home"}
-        >
-          <SelectTrigger className="w-56" aria-label="Home layout">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {variants.map((v) => (
-              <SelectItem key={v.value} value={v.value}>
-                {v.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        {page === "home" ? (
+          <Select
+            value={variant}
+            onValueChange={(v) => setVariant(v as HomeVariant)}
+          >
+            <SelectTrigger className="w-56" aria-label="Home layout">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {variants.map((v) => (
+                <SelectItem key={v.value} value={v.value}>
+                  {v.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        ) : (
+          <p className="text-muted-foreground text-sm">
+            Layout preview applies to the Home tab.
+          </p>
+        )}
       </div>
 
       {/* Preview frame */}

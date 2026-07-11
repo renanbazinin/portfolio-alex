@@ -1,7 +1,9 @@
 "use client";
 
 import { useRef, useState } from "react";
+import Image from "next/image";
 import { upload } from "@vercel/blob/client";
+import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 
@@ -31,26 +33,41 @@ export function MediaUploader({
   onChange: (urls: string[]) => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const [uploading, setUploading] = useState(false);
+  const [pendingNames, setPendingNames] = useState<string[]>([]);
   const [dragOver, setDragOver] = useState(false);
+  const uploading = pendingNames.length > 0;
 
   async function handleFiles(files: FileList | null) {
-    if (!files || files.length === 0) return;
+    if (!files || files.length === 0 || uploading) return;
     const list = multiple ? Array.from(files) : [files[0]];
-    setUploading(true);
-    try {
-      const urls: string[] = [];
-      for (const f of list) {
-        urls.push(await uploadFile(f));
+    setPendingNames(list.map((f) => f.name));
+
+    // Upload concurrently; successes keep the original selection order.
+    const results = await Promise.allSettled(list.map(uploadFile));
+
+    const urls: string[] = [];
+    results.forEach((result, i) => {
+      if (result.status === "fulfilled") {
+        urls.push(result.value);
+      } else {
+        const reason = result.reason;
+        toast.error(
+          reason instanceof Error
+            ? reason.message
+            : `Failed to upload "${list[i].name}"`,
+        );
       }
+    });
+
+    if (urls.length > 0) {
       onChange(multiple ? [...value, ...urls] : [urls[0]]);
-      toast.success(urls.length > 1 ? `${urls.length} images uploaded` : "Image uploaded");
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Upload failed");
-    } finally {
-      setUploading(false);
-      if (inputRef.current) inputRef.current.value = "";
+      toast.success(
+        urls.length > 1 ? `${urls.length} images uploaded` : "Image uploaded",
+      );
     }
+
+    setPendingNames([]);
+    if (inputRef.current) inputRef.current.value = "";
   }
 
   function removeAt(index: number) {
@@ -62,7 +79,9 @@ export function MediaUploader({
       <div className="flex items-center justify-between">
         <span className="text-sm font-medium">{label}</span>
         {uploading ? (
-          <span className="text-muted-foreground text-xs">Uploading…</span>
+          <span className="text-muted-foreground text-xs">
+            Uploading {pendingNames.length}…
+          </span>
         ) : null}
       </div>
 
@@ -106,15 +125,20 @@ export function MediaUploader({
         />
       </div>
 
-      {value.length > 0 ? (
+      {value.length > 0 || pendingNames.length > 0 ? (
         <div className="flex flex-wrap gap-2">
           {value.map((url, i) => (
             <div
               key={`${url}-${i}`}
               className="group border-border relative h-20 w-28 overflow-hidden rounded border"
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={url} alt="" className="h-full w-full object-cover" />
+              <Image
+                src={url}
+                alt=""
+                width={224}
+                height={160}
+                className="h-full w-full object-cover"
+              />
               <Button
                 type="button"
                 variant="destructive"
@@ -124,6 +148,18 @@ export function MediaUploader({
               >
                 ✕
               </Button>
+            </div>
+          ))}
+          {pendingNames.map((name) => (
+            <div
+              key={name}
+              className="border-border bg-muted flex h-20 w-28 flex-col items-center justify-center gap-1 rounded border px-2"
+              aria-label={`Uploading ${name}`}
+            >
+              <Loader2 className="text-muted-foreground size-4 animate-spin" />
+              <span className="text-muted-foreground w-full truncate text-center text-[10px]">
+                {name}
+              </span>
             </div>
           ))}
         </div>

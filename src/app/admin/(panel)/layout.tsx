@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AdminNav } from "@/components/admin/admin-nav";
 import { LogoutButton } from "@/components/admin/logout-button";
 import { ThemeToggle } from "@/components/theme-toggle";
 
@@ -10,35 +11,15 @@ export default function PanelLayout({
   return (
     <div className="flex flex-1 flex-col">
       <header className="border-border flex items-center justify-between border-b px-4 py-3">
-        <div className="flex items-center gap-4">
-          <Link href="/admin" className="font-semibold">
-            Admin
+        <div className="flex items-center gap-6">
+          <Link href="/admin" className="font-display text-base tracking-tight">
+            Alex
+            <span aria-hidden className="text-accent-brand">
+              .
+            </span>
+            <span className="text-muted-foreground font-sans text-sm"> admin</span>
           </Link>
-          <Link
-            href="/admin"
-            className="text-muted-foreground hover:text-foreground text-sm"
-          >
-            Projects
-          </Link>
-          <Link
-            href="/admin/settings"
-            className="text-muted-foreground hover:text-foreground text-sm"
-          >
-            Site content
-          </Link>
-          <Link
-            href="/admin/preview"
-            className="text-muted-foreground hover:text-foreground text-sm"
-          >
-            Preview
-          </Link>
-          <Link
-            href="/"
-            target="_blank"
-            className="text-muted-foreground hover:text-foreground text-sm"
-          >
-            View site ↗
-          </Link>
+          <AdminNav />
         </div>
         <div className="flex items-center gap-3">
           <ThemeToggle />

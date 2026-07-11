@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -31,9 +32,37 @@ export function SettingsForm({
   const router = useRouter();
   const [form, setForm] = useState<SiteContent>(initial);
   const [saving, setSaving] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [dirty, setDirty] = useState(false);
+  const [confirmLeave, setConfirmLeave] = useState(false);
 
   function set<K extends keyof SiteContent>(key: K, val: SiteContent[K]) {
     setForm((f) => ({ ...f, [key]: val }));
+    setDirty(true);
+    setErrors((e) => {
+      if (!(key in e)) return e;
+      const next = { ...e };
+      delete next[key];
+      return next;
+    });
+  }
+
+  // Warn on tab close / hard navigation while there are unsaved edits.
+  useEffect(() => {
+    if (!dirty) return;
+    function onBeforeUnload(e: BeforeUnloadEvent) {
+      e.preventDefault();
+    }
+    window.addEventListener("beforeunload", onBeforeUnload);
+    return () => window.removeEventListener("beforeunload", onBeforeUnload);
+  }, [dirty]);
+
+  function cancel() {
+    if (dirty) {
+      setConfirmLeave(true);
+    } else {
+      router.push("/admin");
+    }
   }
 
   // --- specialties ---
@@ -141,10 +170,26 @@ export function SettingsForm({
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
+        const fieldErrors = data?.issues?.fieldErrors as
+          | Record<string, string[]>
+          | undefined;
+        if (res.status === 422 && fieldErrors) {
+          const mapped: Record<string, string> = {};
+          for (const [field, messages] of Object.entries(fieldErrors)) {
+            if (messages?.length) mapped[field] = messages.join(" · ");
+          }
+          if (Object.keys(mapped).length > 0) {
+            setErrors(mapped);
+            toast.error("Please fix the highlighted fields");
+            return;
+          }
+        }
         throw new Error(data?.error || "Save failed");
       }
       const saved = (await res.json()) as SiteContent;
       setForm(saved);
+      setDirty(false);
+      setErrors({});
       toast.success("Site content saved");
       router.refresh();
     } catch (err) {
@@ -199,25 +244,28 @@ export function SettingsForm({
           </Select>
         </Field>
 
-        <Field label="Hero title">
+        <Field label="Hero title" error={errors.heroTitle}>
           <Textarea
             value={form.heroTitle}
             onChange={(e) => set("heroTitle", e.target.value)}
             rows={2}
             placeholder="Alex — bringing stories to life through animation."
+            aria-invalid={Boolean(errors.heroTitle)}
           />
         </Field>
-        <Field label="Hero subtitle">
+        <Field label="Hero subtitle" error={errors.heroSubtitle}>
           <Textarea
             value={form.heroSubtitle}
             onChange={(e) => set("heroSubtitle", e.target.value)}
             rows={3}
             placeholder="A short intro shown under the hero title…"
+            aria-invalid={Boolean(errors.heroSubtitle)}
           />
         </Field>
 
         <div className="space-y-3">
           <Label>Specialties</Label>
+          <SectionError error={errors.specialties} />
           {form.specialties.map((s, i) => (
             <div
               key={i}
@@ -252,16 +300,18 @@ export function SettingsForm({
 
       {/* About */}
       <Section title="About">
-        <Field label="Heading">
+        <Field label="Heading" error={errors.aboutHeading}>
           <Input
             value={form.aboutHeading}
             onChange={(e) => set("aboutHeading", e.target.value)}
             placeholder="Bringing imagination to life."
+            aria-invalid={Boolean(errors.aboutHeading)}
           />
         </Field>
 
         <div className="space-y-2">
           <Label>Intro paragraphs</Label>
+          <SectionError error={errors.aboutIntro} />
           {form.aboutIntro.map((p, i) => (
             <div key={i} className="flex gap-2">
               <Textarea
@@ -278,6 +328,7 @@ export function SettingsForm({
 
         <div className="space-y-3">
           <Label>Expertise groups</Label>
+          <SectionError error={errors.expertise} />
           {form.expertise.map((g, i) => (
             <div
               key={i}
@@ -315,6 +366,7 @@ export function SettingsForm({
 
         <div className="space-y-3">
           <Label>Approach items</Label>
+          <SectionError error={errors.approach} />
           {form.approach.map((a, i) => (
             <div
               key={i}
@@ -351,40 +403,49 @@ export function SettingsForm({
       {/* Contact */}
       <Section title="Contact & identity">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <Field label="Name">
+          <Field label="Name" error={errors.name}>
             <Input
               value={form.name}
               onChange={(e) => set("name", e.target.value)}
               placeholder="Alex"
+              aria-invalid={Boolean(errors.name)}
             />
           </Field>
-          <Field label="Role">
+          <Field label="Role" error={errors.role}>
             <Input
               value={form.role}
               onChange={(e) => set("role", e.target.value)}
               placeholder="Animator"
+              aria-invalid={Boolean(errors.role)}
             />
           </Field>
-          <Field label="Location">
+          <Field label="Location" error={errors.location}>
             <Input
               value={form.location}
               onChange={(e) => set("location", e.target.value)}
               placeholder="Los Angeles, CA"
+              aria-invalid={Boolean(errors.location)}
             />
           </Field>
         </div>
-        <Field label="Contact email" hint="Shown as the footer Email link">
+        <Field
+          label="Contact email"
+          hint="Shown as the footer Email link"
+          error={errors.contactEmail}
+        >
           <Input
             type="email"
             value={form.contactEmail}
             onChange={(e) => set("contactEmail", e.target.value)}
             placeholder="alex@example.com"
+            aria-invalid={Boolean(errors.contactEmail)}
           />
         </Field>
       </Section>
 
       {/* Social links */}
       <Section title="Social links">
+        <SectionError error={errors.socialLinks} />
         {form.socialLinks.length === 0 ? (
           <p className="text-muted-foreground text-sm">No links yet.</p>
         ) : null}
@@ -407,11 +468,28 @@ export function SettingsForm({
         <AddButton onClick={addLink}>Add social link</AddButton>
       </Section>
 
-      <div className="mt-8 flex justify-end">
+      <div className="mt-8 flex justify-end gap-2">
+        <Button type="button" variant="outline" onClick={cancel}>
+          Cancel
+        </Button>
         <Button type="submit" disabled={saving}>
           {saving ? "Saving…" : "Save changes"}
         </Button>
       </div>
+
+      <ConfirmDialog
+        open={confirmLeave}
+        onOpenChange={setConfirmLeave}
+        title="Discard changes?"
+        description="You have unsaved changes. Leaving now will discard them."
+        confirmLabel="Discard and leave"
+        destructive
+        onConfirm={() => {
+          setConfirmLeave(false);
+          setDirty(false);
+          router.push("/admin");
+        }}
+      />
     </form>
   );
 }
@@ -436,19 +514,31 @@ function Section({
 function Field({
   label,
   hint,
+  error,
   children,
 }: {
   label: string;
   hint?: string;
+  error?: string;
   children: React.ReactNode;
 }) {
   return (
     <div className="space-y-1.5">
       <Label>{label}</Label>
       {children}
-      {hint ? <p className="text-muted-foreground text-xs">{hint}</p> : null}
+      {error ? (
+        <p className="text-destructive text-xs">{error}</p>
+      ) : hint ? (
+        <p className="text-muted-foreground text-xs">{hint}</p>
+      ) : null}
     </div>
   );
+}
+
+/** Section-level error line for array editors (anchored per Zod top-level path). */
+function SectionError({ error }: { error?: string }) {
+  if (!error) return null;
+  return <p className="text-destructive text-xs">{error}</p>;
 }
 
 function AddButton({

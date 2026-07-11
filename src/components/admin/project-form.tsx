@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { toast } from "sonner";
 import type { Project } from "@/lib/db/schema";
 import { Button } from "@/components/ui/button";
@@ -17,6 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { MediaUploader } from "@/components/admin/media-uploader";
+import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 
 type FormState = {
   title: string;
@@ -50,15 +50,48 @@ function fromProject(p?: Project): FormState {
   };
 }
 
+/** Shape of `zodError.flatten()` as returned by the write APIs on 422. */
+type FlattenedIssues = {
+  formErrors?: string[];
+  fieldErrors?: Record<string, string[]>;
+};
+
 export function ProjectForm({ project }: { project?: Project }) {
   const router = useRouter();
   const isEdit = Boolean(project);
   const [form, setForm] = useState<FormState>(fromProject(project));
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
+  const [dirty, setDirty] = useState(false);
+  const [confirmLeave, setConfirmLeave] = useState(false);
 
   function set<K extends keyof FormState>(key: K, val: FormState[K]) {
     setForm((f) => ({ ...f, [key]: val }));
+    setDirty(true);
+    setErrors((e) => {
+      if (!(key in e)) return e;
+      const next = { ...e };
+      delete next[key];
+      return next;
+    });
+  }
+
+  // Warn on tab close / hard navigation while there are unsaved edits.
+  useEffect(() => {
+    if (!dirty) return;
+    function onBeforeUnload(e: BeforeUnloadEvent) {
+      e.preventDefault();
+    }
+    window.addEventListener("beforeunload", onBeforeUnload);
+    return () => window.removeEventListener("beforeunload", onBeforeUnload);
+  }, [dirty]);
+
+  function cancel() {
+    if (dirty) {
+      setConfirmLeave(true);
+    } else {
+      router.push("/admin");
+    }
   }
 
   function validate(): boolean {
@@ -111,8 +144,21 @@ export function ProjectForm({ project }: { project?: Project }) {
       );
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
+        const issues = data?.issues as FlattenedIssues | undefined;
+        if (res.status === 422 && issues?.fieldErrors) {
+          const fieldErrors: Record<string, string> = {};
+          for (const [field, messages] of Object.entries(issues.fieldErrors)) {
+            if (messages?.length) fieldErrors[field] = messages[0];
+          }
+          if (Object.keys(fieldErrors).length > 0) {
+            setErrors(fieldErrors);
+            toast.error("Please fix the highlighted fields");
+            return;
+          }
+        }
         throw new Error(data?.error || "Save failed");
       }
+      setDirty(false);
       toast.success(isEdit ? "Changes saved" : "Project created");
       router.push("/admin");
       router.refresh();
@@ -129,8 +175,8 @@ export function ProjectForm({ project }: { project?: Project }) {
         <h1 className="text-2xl font-semibold tracking-tight">
           {isEdit ? "Edit project" : "New project"}
         </h1>
-        <Button variant="ghost" size="sm" asChild>
-          <Link href="/admin">Cancel</Link>
+        <Button variant="ghost" size="sm" type="button" onClick={cancel}>
+          Cancel
         </Button>
       </div>
 
@@ -140,6 +186,7 @@ export function ProjectForm({ project }: { project?: Project }) {
             value={form.title}
             onChange={(e) => set("title", e.target.value)}
             placeholder="Project title"
+            aria-invalid={Boolean(errors.title)}
           />
         </Field>
 
@@ -149,6 +196,7 @@ export function ProjectForm({ project }: { project?: Project }) {
               value={form.slug}
               onChange={(e) => set("slug", e.target.value)}
               placeholder="my-project"
+              aria-invalid={Boolean(errors.slug)}
             />
           </Field>
           <Field label="Year" error={errors.year}>
@@ -157,66 +205,76 @@ export function ProjectForm({ project }: { project?: Project }) {
               onChange={(e) => set("year", e.target.value)}
               placeholder="2025"
               inputMode="numeric"
+              aria-invalid={Boolean(errors.year)}
             />
           </Field>
         </div>
 
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-          <Field label="Category">
+          <Field label="Category" error={errors.category}>
             <Input
               value={form.category}
               onChange={(e) => set("category", e.target.value)}
               placeholder="e.g. Animation"
+              aria-invalid={Boolean(errors.category)}
             />
           </Field>
-          <Field label="Role">
+          <Field label="Role" error={errors.role}>
             <Input
               value={form.role}
               onChange={(e) => set("role", e.target.value)}
               placeholder="e.g. Lead Designer"
+              aria-invalid={Boolean(errors.role)}
             />
           </Field>
         </div>
 
-        <Field label="Tools" hint="Comma-separated">
+        <Field label="Tools" error={errors.tools} hint="Comma-separated">
           <Input
             value={form.tools}
             onChange={(e) => set("tools", e.target.value)}
             placeholder="Blender, After Effects"
+            aria-invalid={Boolean(errors.tools)}
           />
         </Field>
 
-        <Field label="Description">
+        <Field label="Description" error={errors.description}>
           <Textarea
             value={form.description}
             onChange={(e) => set("description", e.target.value)}
             rows={5}
             placeholder="Describe the project…"
+            aria-invalid={Boolean(errors.description)}
           />
         </Field>
 
-        <MediaUploader
-          label="Thumbnail"
-          value={form.thumbnail ? [form.thumbnail] : []}
-          onChange={(urls) => set("thumbnail", urls[0] ?? "")}
-        />
+        <Field label="" error={errors.thumbnail}>
+          <MediaUploader
+            label="Thumbnail"
+            value={form.thumbnail ? [form.thumbnail] : []}
+            onChange={(urls) => set("thumbnail", urls[0] ?? "")}
+          />
+        </Field>
 
-        <MediaUploader
-          label="Gallery images"
-          multiple
-          value={form.images}
-          onChange={(urls) => set("images", urls)}
-        />
+        <Field label="" error={errors.images}>
+          <MediaUploader
+            label="Gallery images"
+            multiple
+            value={form.images}
+            onChange={(urls) => set("images", urls)}
+          />
+        </Field>
 
-        <Field label="Video URL">
+        <Field label="Video URL" error={errors.videoUrl}>
           <Input
             value={form.videoUrl}
             onChange={(e) => set("videoUrl", e.target.value)}
             placeholder="https://…"
+            aria-invalid={Boolean(errors.videoUrl)}
           />
         </Field>
 
-        <Field label="Status">
+        <Field label="Status" error={errors.publishStatus}>
           <Select
             value={form.publishStatus}
             onValueChange={(v) => set("publishStatus", v as FormState["publishStatus"])}
@@ -250,11 +308,25 @@ export function ProjectForm({ project }: { project?: Project }) {
           <Button type="submit" disabled={saving}>
             {saving ? "Saving…" : isEdit ? "Save changes" : "Create project"}
           </Button>
-          <Button type="button" variant="outline" asChild>
-            <Link href="/admin">Cancel</Link>
+          <Button type="button" variant="outline" onClick={cancel}>
+            Cancel
           </Button>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={confirmLeave}
+        onOpenChange={setConfirmLeave}
+        title="Discard changes?"
+        description="You have unsaved changes. Leaving now will discard them."
+        confirmLabel="Discard and leave"
+        destructive
+        onConfirm={() => {
+          setConfirmLeave(false);
+          setDirty(false);
+          router.push("/admin");
+        }}
+      />
     </form>
   );
 }
@@ -274,10 +346,12 @@ function Field({
 }) {
   return (
     <div className="space-y-1.5">
-      <Label>
-        {label}
-        {required ? <span className="text-destructive"> *</span> : null}
-      </Label>
+      {label ? (
+        <Label>
+          {label}
+          {required ? <span className="text-destructive"> *</span> : null}
+        </Label>
+      ) : null}
       {children}
       {error ? (
         <p className="text-destructive text-xs">{error}</p>
